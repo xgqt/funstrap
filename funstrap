@@ -125,8 +125,6 @@ DO_DOWNLOAD="yes"
 DO_CHECK="yes"
 DO_UNPACK="yes"
 
-BASE_URL="https://build.funtoo.org/$RELEASE/$ARCH/$SUB"
-
 # Command line options
 
 while [ -n "$1" ]; do
@@ -163,6 +161,10 @@ while [ -n "$1" ]; do
     esac
     shift
 done
+
+# After all variables are in place, set the download url
+
+BASE_URL="https://build.funtoo.org/$RELEASE/$ARCH/$SUB"
 
 # Check root
 
