@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+
+set -e
+export PATH
+
+usage() {
+    cat <<EOF
+
+funstrap - funtoo base system bootstrap
+based on debootstrap
+
+usage: funstrap
+
+Options:
+    -h              display this help page
+    -d              choose directory
+    -r              choose release
+    -a              choose architecture
+    -s              choose sub-architecture
+    --no-download   use a downloaded stage tarball
+    --no-check      don't checksum the tarball
+    --no-unpack     don't unpack the tarball
+
+Defaults:
+    directory   =   current directory
+    release     =   1.3-release-std
+    arch        =   x86-64bit
+    sub-arch    =   generic_64
+
+Avalible values:
+    release:
+        1.2-release-ec2
+        1.3-release-ec2
+        1.3-release-std
+        1.4-release-std
+
+    arch:
+        arm-32bit
+        arm-64bit
+        pure64
+        riscv-64bit
+        x86-32bit
+        x86-64bit
+
+    sub arch:
+        arm-32bit:
+            armv6j_hardfp
+            armv6j_vfp_hardfp
+            armv7a_vfpv3_hardfp
+            odroid-xu4
+            raspi
+            raspi2
+            raspi3
+        arm-64bit:
+            arm64_generic
+        pure64:
+            amd64-zen-pure64
+            intel64-broadwell-pure64
+            intel64-haswell-pure64
+            intel64-ivybridge-pure64
+            intel64-nehalem-pure64
+            intel64-silvermont-pure64
+            intel64-skylake-pure64
+            intel64-westmere-pure64
+        riscv-64bit:
+            sifive-fu540
+        x86-32bit:
+            atom_32
+            generic_32
+            i686
+            pentium4
+        x86-64bit:
+            amd64-bulldozer
+            amd64-excavator
+            amd64-k10
+            amd64-piledriver
+            amd64-steamroller
+            amd64-zen
+            core2_64
+            generic_64
+            intel64-broadwell
+            intel64-haswell
+            intel64-ivybridge
+            intel64-nehalem
+            intel64-sandybridge
+            intel64-silvermont
+            intel64-skylake
+            intel64-westmere
+
+EOF
+}
+
+bold_msg() {
+    echo "$(tput bold)$1$(tput sgr0)"
+}
+
+err_msg() {
+    echo "$(tput bold)$1$(tput sgr0)"
+    exit 1
+}
+
+get_stage() {
+    wget $BASE_URL/stage3-latest.tar.xz -O $DIRECTORY/stage3-latest.tar.xz
+}
+
+check_stage() {
+    wget $BASE_URL/stage3-latest.tar.xz.hash.txt -O $DIRECTORY/stage3-latest.tar.xz.hash.txt
+    sum=$(sha256sum $DIRECTORY/stage3-latest.tar.xz | cut -d ' ' -f1)
+    grep $sum $DIRECTORY/stage3-latest.tar.xz.hash.txt || err_msg "Checksum failed"
+}
+
+unpack_stage() {
+    tar xpf $DIRECTORY/stage3-latest.tar.xz -C $DIRECTORY
+}
+
+# Defaults
+
+DIRECTORY="."
+
+RELEASE="1.3-release-std"
+ARCH="x86-64bit"
+SUB="generic_64"
+
+DO_DOWNLOAD="yes"
+DO_CHECK="yes"
+DO_UNPACK="yes"
+
+BASE_URL="https://build.funtoo.org/$RELEASE/$ARCH/$SUB"
+
+# Command line options
+
+while [ -n "$1" ]; do
+    case "$1" in
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    -d | --directory)
+        DIRECTORY="$2"
+        ;;
+    -r | --release)
+        RELEASE="$2"
+        ;;
+    -a | --arch)
+        ARCH="$2"
+        ;;
+    -s | --sub_arch)
+        SUB="$2"
+        ;;
+    --no-download)
+        DO_DOWNLOAD="no"
+        ;;
+    --no-unpack)
+        DO_UNPACK="no"
+        ;;
+    --no-check)
+        DO_CHECK="no"
+        ;;
+    -*)
+        usage
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+# Check root
+
+(($EUID == 0)) || (
+    err_msg "This script must be run with root privileges!"
+)
+
+# Do some work
+
+if [ $DO_DOWNLOAD = "yes" ]; then
+    bold_msg "Downloading for $ARCH-$SUB into $DIRECTORY ..."
+    get_stage
+    bold_msg "Stage downloaded, OK"
+fi
+
+if [ $DO_CHECK = "yes" ]; then
+    bold_msg "Checking sha256 sum ..."
+    check_stage
+    bold_msg "Stage checked, OK"
+fi
+
+if [ $DO_UNPACK = "yes" ]; then
+    bold_msg "Unpacking stage tarball ..."
+    unpack_stage
+    bold_msg "Stage unpacked, OK"
+fi
