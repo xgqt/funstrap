@@ -4,7 +4,7 @@ set -e
 export PATH
 
 usage() {
-    cat <<EOF
+    cat <<HELP
 
 funstrap - funtoo base system bootstrap
 based on debootstrap
@@ -87,7 +87,7 @@ Avalible values:
             intel64-skylake
             intel64-westmere
 
-EOF
+HELP
 }
 
 bold_msg() {
