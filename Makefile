@@ -1,6 +1,6 @@
 SCRIPT  = funstrap
 
-PREFIX  = /usr/local
+PREFIX  = /usr
 DESTDIR =
 INSTDIR = $(DESTDIR)$(PREFIX)
 INSTBIN = $(INSTDIR)/bin
