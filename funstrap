@@ -1,7 +1,24 @@
 #!/usr/bin/env bash
 
+
 set -e
 export PATH
+
+
+base_url="https://build.funtoo.org"
+
+# Defaults
+
+os_directory="."
+
+os_release="1.3-release-std"
+os_arch="x86-64bit"
+os_subarch="generic_64"
+
+do_download="yes"
+do_check="yes"
+do_unpack="yes"
+
 
 usage() {
     cat <<HELP
@@ -100,30 +117,19 @@ err_msg() {
 }
 
 get_stage() {
-    wget $BASE_URL/stage3-latest.tar.xz -O $DIRECTORY/stage3-latest.tar.xz
+    wget $base_url/$os_release/$os_arch/$os_subarch/stage3-latest.tar.xz -O $os_directory/stage3-latest.tar.xz
 }
 
 check_stage() {
-    wget $BASE_URL/stage3-latest.tar.xz.hash.txt -O $DIRECTORY/stage3-latest.tar.xz.hash.txt
-    sum=$(sha256sum $DIRECTORY/stage3-latest.tar.xz | cut -d ' ' -f1)
-    grep $sum $DIRECTORY/stage3-latest.tar.xz.hash.txt || err_msg "Checksum failed"
+    wget $base_url/$os_release/$os_arch/$os_subarch/stage3-latest.tar.xz.hash.txt -O $os_directory/stage3-latest.tar.xz.hash.txt
+    tarball_checksum=$(sha256sum $os_directory/stage3-latest.tar.xz | cut -d ' ' -f1)
+    grep $tarball_checksum $os_directory/stage3-latest.tar.xz.hash.txt || err_msg "Checksum failed"
 }
 
 unpack_stage() {
-    tar xpf $DIRECTORY/stage3-latest.tar.xz -C $DIRECTORY
+    tar xpf $os_directory/stage3-latest.tar.xz -C $os_directory
 }
 
-# Defaults
-
-DIRECTORY="."
-
-RELEASE="1.3-release-std"
-ARCH="x86-64bit"
-SUB="generic_64"
-
-DO_DOWNLOAD="yes"
-DO_CHECK="yes"
-DO_UNPACK="yes"
 
 # Command line options
 
@@ -134,25 +140,25 @@ while [ -n "$1" ]; do
         exit 0
         ;;
     -d | --directory)
-        DIRECTORY="$2"
+        os_directory="$2"
         ;;
     -r | --release)
-        RELEASE="$2"
+        os_release="$2"
         ;;
     -a | --arch)
-        ARCH="$2"
+        os_arch="$2"
         ;;
     -s | --sub_arch)
-        SUB="$2"
+        os_subarch="$2"
         ;;
     --no-download)
-        DO_DOWNLOAD="no"
+        do_download="no"
         ;;
     --no-unpack)
-        DO_UNPACK="no"
+        do_unpack="no"
         ;;
     --no-check)
-        DO_CHECK="no"
+        do_check="no"
         ;;
     -*)
         usage
@@ -162,31 +168,29 @@ while [ -n "$1" ]; do
     shift
 done
 
-# After all variables are in place, set the download url
-
-BASE_URL="https://build.funtoo.org/$RELEASE/$ARCH/$SUB"
 
 # Check root
 
-(($EUID == 0)) || (
+((EUID == 0)) || (
     err_msg "This script must be run with root privileges!"
 )
 
+
 # Do some work
 
-if [ $DO_DOWNLOAD = "yes" ]; then
-    bold_msg "Downloading for $ARCH-$SUB into $DIRECTORY ..."
+if [ $do_download = "yes" ]; then
+    bold_msg "Downloading for $os_arch-$os_subarch into $os_directory ..."
     get_stage
     bold_msg "Stage downloaded, OK"
 fi
 
-if [ $DO_CHECK = "yes" ]; then
+if [ $do_check = "yes" ]; then
     bold_msg "Checking sha256 sum ..."
     check_stage
     bold_msg "Stage checked, OK"
 fi
 
-if [ $DO_UNPACK = "yes" ]; then
+if [ $do_unpack = "yes" ]; then
     bold_msg "Unpacking stage tarball ..."
     unpack_stage
     bold_msg "Stage unpacked, OK"
