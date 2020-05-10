@@ -1,0 +1,8 @@
+services:
+  - docker:dind
+
+shellcheck:
+  image: docker:latest
+  stage: test
+  script:
+    - docker run --rm -v "$(pwd):/mnt" koalaman/shellcheck:stable src/*

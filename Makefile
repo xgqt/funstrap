@@ -16,7 +16,7 @@ install:
 	test -d $(INSTDIR) || mkdir -p $(INSTDIR)
 	test -d $(INSTBIN) || mkdir -p $(INSTBIN)
 
-	install -m 0755 $(SCRIPT) $(INSTBIN)
+	install -m 0755 src/$(SCRIPT) $(INSTBIN)
 
 
 .PHONY: uninstall
