@@ -123,7 +123,7 @@ get_stage() {
 check_stage() {
     wget $base_url/$os_release/$os_arch/$os_subarch/stage3-latest.tar.xz.hash.txt -O $os_directory/stage3-latest.tar.xz.hash.txt
     tarball_checksum=$(sha256sum $os_directory/stage3-latest.tar.xz | cut -d ' ' -f1)
-    grep $tarball_checksum $os_directory/stage3-latest.tar.xz.hash.txt || err_msg "Checksum failed"
+    grep "$tarball_checksum" $os_directory/stage3-latest.tar.xz.hash.txt || err_msg "Checksum failed"
 }
 
 unpack_stage() {
